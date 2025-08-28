@@ -1,5 +1,4 @@
 'use client'
-import Head from 'next/head'
 import { useState, useEffect, useRef } from 'react';
 
 type Object = {
@@ -8,6 +7,8 @@ type Object = {
 	height: number,
 	x: number,
 	y: number,
+	font_size: number,
+	font_color: string,
 	bg_color: string,
 	border: number,
 	text: string,
@@ -18,6 +19,11 @@ export default function ToolBox() {
 	const [textObjects, setTextObjects] = useState<Object>([]);
 	const [shapeObjects, setShapebjects] = useState<Object>([]);
 	const [currentFocused, setCurrentFocused] = useState<Object>(null);
+	const [showObjEditDialog, setShowObjEditDialog] = useState(false);
+
+	const [currentFontSize, setCurrentFontSize] = useState(0);
+	const [currentBGColor, setCurrentBGColor] = useState('');
+	const [currentFontColor, setCurrentFontColor] = useState('#000000');
 
 	function AddTextObject() {
 		setTextObjects(prev => [...prev, {
@@ -26,7 +32,9 @@ export default function ToolBox() {
 			height: 200, 
 			x: 500, 
 			y: 500, 
-			bg_color: 'bg-red-200',
+			font_size: 16,
+			font_color: '#000000',
+			bg_color: '#ffcf39',
 			border: 0,
 			text: "Text here",
 			focus: true,
@@ -47,33 +55,60 @@ export default function ToolBox() {
 		console.log(currentObj);
 
 		const handleMouseMove = ()=> {
+
 			const onMouseUp = ()=> {
-				document.removeEventListener('mousemove', onMouseMove);
-				document.removeEventListener('mousedown', handleMouseMove);
-				currentObj.focus = false;
+				currentObj.removeEventListener('mousemove', onMouseMove);
+				document.removeEventListener('mouseup', onMouseUp);
 			}
 
 			const onMouseMove = (e: React.MouseEvent)=> {
+				setShowObjEditDialog(showObjEditDialog && (false));  // remove the edit dialog when obj is moved
+
 		        let x = parseInt(window.getComputedStyle(currentObj).left);
 		        let y = parseInt(window.getComputedStyle(currentObj).top);
 
 		        currentObj.style.left = (x + e.movementX) + 'px';
 		        currentObj.style.top = (y + e.movementY) + 'px';
+
+		        currentFocused.x = x + e.movementX;
+		        currentFocused.y = y + e.movementY;
 			}
 
-			document.addEventListener('mousemove', onMouseMove);
+			currentObj.addEventListener('mousemove', onMouseMove);
 			document.addEventListener('mouseup', onMouseUp);
 		};
 
 		currentObj.addEventListener('mousedown', handleMouseMove);
-		return ()=> (document.removeEventListener('mousedown', handleMouseMove));
 
+		return ()=> (currentObj.removeEventListener('mousedown', handleMouseMove));
 	}, [currentFocused]);
 
-	// function TextOnClick(e: React.MouseEvent<HTMLDivElement>) {
+
 	function ObjectOnClick(obj: Object, e: React.MouseEvent) {
 		e.preventDefault();
 		setCurrentFocused(obj);
+		setCurrentFontSize(obj.font_size);
+
+		if (e.type == 'contextmenu' && showObjEditDialog == false) {
+			setShowObjEditDialog(true);
+		} else if (e.type == 'contextmenu' && showObjEditDialog) {
+			setShowObjEditDialog(false);
+		}
+	}
+
+	function ChangeBGColor(event) {
+		setCurrentBGColor(event.target.value);
+		currentFocused.bg_color = currentBGColor;
+	}
+
+	function ChangeFontColor(event) {
+		setCurrentFontColor(event.target.value);
+		currentFocused.font_color = currentFontColor;
+	}
+
+	function ChangeFontSize(event) {
+		setCurrentFontSize(event.target.value);
+		currentFocused.font_size = currentFontSize;
 	}
 
 	return (<>
@@ -86,13 +121,73 @@ export default function ToolBox() {
 			</ul>
 		</div>
 
+		{/* add the onclick functions or update for the edit properties */}
+		{/* refer to edit-element_menu.js */}
+
+		{showObjEditDialog && currentFocused && (
+			<div
+				className="z-[9999] absolute bg-white shadow-lg rounded-lg p-4 w-[250px]"
+				style={{
+					left: currentFocused.x + currentFocused.width + 20 + "px",
+					top: currentFocused.y + "px",
+				}}
+			>
+				<h2 className="text-lg font-semibold mb-3">Edit</h2>
+
+				{/* Background Color Section */}
+				<div className="mb-4">
+					<h3 className="text-sm font-medium mb-2">BG color:</h3>
+					<input value={currentFocused.bg_color} onChange={(e)=>{ChangeBGColor(e)}} type="color" 
+						placeholder="Color" className="w-full h-8 border rounded mb-2"/>
+					<div className="flex gap-2">
+						<div className="w-6 h-6 rounded cursor-pointer bg-red-500"></div>
+						<div className="w-6 h-6 rounded cursor-pointer bg-blue-500"></div>
+						<div className="w-6 h-6 rounded cursor-pointer bg-green-500"></div>
+					</div>
+				</div>
+
+				{/* Font Color Section */}
+				<div className="mb-4">
+					<h3 className="text-sm font-medium mb-2">Font color:</h3>
+					<input 
+						value={currentFocused.font_color}
+						onChange={(e)=>{ChangeFontColor(e)}}
+						type="color" 
+						placeholder="Color" 
+						className="w-full h-8 border rounded mb-2"
+					/>
+					<div className="flex gap-2">
+						<div className="w-6 h-6 rounded cursor-pointer bg-red-500"></div>
+						<div className="w-6 h-6 rounded cursor-pointer bg-blue-500"></div>
+						<div className="w-6 h-6 rounded cursor-pointer bg-green-500"></div>
+					</div>
+				</div>
+
+				{/* Font size Section */}
+				<div>
+					<h3 className='mb-2'>Font Size</h3>
+					<input 
+						id="font-size-input"
+						type="number"
+						placeholder="Font size"
+						className="p-2 w-full h-8 border rounded mb-2"
+						value={currentFontSize}
+						onChange={(e)=> {ChangeFontSize(e)}}
+					/>
+				</div>
+			</div>
+		)}
+
+
 		{ textObjects.map(obj => (
 			<div 
 				key={obj.id} 
 				id={obj.id} 
 				onClick={(e)=>{ObjectOnClick(obj, e)}}
-				className={`absolute ${obj.bg_color}`}
+				onContextMenu={(e)=>{ObjectOnClick(obj, e)}}
+				className={`absolute`}
 				style={{
+					backgroundColor: obj.bg_color, 
 					border: obj.border + "px solid black",
 					width: obj.width + "px",
 					height: obj.width + "px",
@@ -106,8 +201,11 @@ export default function ToolBox() {
 					placeholder={obj.text} 
 					value={obj.text}
 					onChange={e => updateText(obj.id, e.target.value)}
-					className='w-[100%] h-[100%] text-center'
-					// style={{ pointerEvents: 'none', }}
+					className='w-[100%] h-[100%] text-center focus:outline-none focus:border-none'
+					style={{ 
+						fontSize: obj.font_size + 'px', 
+						color: obj.font_color,
+					}}
 				/>
 			</div>
 		)) }
