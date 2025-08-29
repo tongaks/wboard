@@ -16,8 +16,8 @@ type Object = {
 }
 
 export default function ToolBox() {
-	const [textObjects, setTextObjects] = useState<Object>([]);
-	const [shapeObjects, setShapebjects] = useState<Object>([]);
+	const [textObjects, setTextObjects] = useState<Object[]>([]);
+	const [shapeObjects, setShapebjects] = useState<Object[]>([]);
 	const [currentFocused, setCurrentFocused] = useState<Object>(null);
 	const [showObjEditDialog, setShowObjEditDialog] = useState(false);
 
@@ -35,7 +35,7 @@ export default function ToolBox() {
 			font_size: 16,
 			font_color: '#000000',
 			bg_color: '#ffcf39',
-			border: 0,
+			border: 1,
 			text: "Text here",
 			focus: true,
 		}]);
@@ -111,6 +111,43 @@ export default function ToolBox() {
 		currentFocused.font_size = currentFontSize;
 	}
 
+	function ChangeFontSizeBtn(event) {
+		let btn = event.target.id;
+
+		if (btn == "increase-btn") {
+			currentFocused.font_size = currentFontSize + 1;
+		} else if (btn == "decrease-btn" && currentFocused.font_size > 1) {
+			currentFocused.font_size = currentFontSize - 1;
+		}
+
+		setCurrentFontSize(currentFocused.font_size);
+	}
+
+	useEffect(()=> {
+		const handleKeyShortcuts = (e) => {
+			if (e.repeat) return;
+
+			if (e.key == 'Escape') {
+				setShowObjEditDialog(false);
+				setCurrentFocused(null);
+				document.activeElement.blur();
+			} else if (e.key == 'Delete') {
+				if (currentFocused != null) {
+					// remove only the element, but the obj still exists
+					let current = document.getElementById(currentFocused.id);
+					current.remove();
+
+					// remove the obj, but error happen because 
+					//  the index (size) of array changes and duplicate id happens
+					// setTextObjects(prev => prev.filter(obj => obj.id != currentFocused.id));
+				}
+			}
+		}
+
+		window.addEventListener('keydown', handleKeyShortcuts);
+		return () => window.removeEventListener('keydown', handleKeyShortcuts);
+	}, [currentFocused]);
+
 	return (<>
 		<div className="z-9999 absolute mx-2 shadow-xl p-5 rounded-md w-fit h-auto bg-white top-[35%]"> 
 			<ul>
@@ -166,14 +203,18 @@ export default function ToolBox() {
 				{/* Font size Section */}
 				<div>
 					<h3 className='mb-2'>Font Size</h3>
-					<input 
-						id="font-size-input"
-						type="number"
-						placeholder="Font size"
-						className="p-2 w-full h-8 border rounded mb-2"
-						value={currentFontSize}
-						onChange={(e)=> {ChangeFontSize(e)}}
-					/>
+					<div className='flex text-center justify-center content-center gap-2'>
+						<i id='increase-btn' onClick={(e)=>{ChangeFontSizeBtn(e)}} className="cursor-pointer fa-solid fa-plus text-2xl"></i>
+						<input 
+							id="font-size-input"
+							type="number"
+							placeholder="Font size"
+							className="p-2 w-full h-8 border rounded mb-2"
+							value={currentFontSize}
+							onChange={(e)=> {ChangeFontSize(e)}}
+						/>
+						<i id='decrease-btn' onClick={(e)=>{ChangeFontSizeBtn(e)}} className="cursor-pointer fa-solid fa-minus text-2xl"></i>
+					</div>
 				</div>
 			</div>
 		)}
