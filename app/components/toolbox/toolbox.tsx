@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 type Object = {
 	id: string,
@@ -17,8 +17,8 @@ type Object = {
 
 export default function ToolBox() {
 	const [textObjects, setTextObjects] = useState<Object[]>([]);
-	const [shapeObjects, setShapebjects] = useState<Object[]>([]);
-	const [currentFocused, setCurrentFocused] = useState<Object>(null);
+	const [shapeObjects, setShapeObjects] = useState<Object[]>([]);
+	const [currentFocused, setCurrentFocused] = useState<Object | null>(null);
 	const [showObjEditDialog, setShowObjEditDialog] = useState(false);
 
 	const [currentFontSize, setCurrentFontSize] = useState(0);
@@ -42,7 +42,19 @@ export default function ToolBox() {
 	}
 
 	function AddShapeObject() {
-		setShapeObjects(prev => [...prev, {id: "shp-obj-"+prev.length, width: 200, height: 200,  text: "", focus: true}]);
+		setShapeObjects(prev => [...prev, {
+			id: "shp-obj-"+prev.length, 
+			width: 200, 
+			height: 200, 
+			x: 500, 
+			y: 500, 
+			font_size: 16,
+			font_color: '#000000',
+			bg_color: '#ffcf39',
+			border: 1,
+			text: "",
+			focus: true,
+		}]);
 	}
 
 	function updateText(id: string, text: string) {
@@ -51,27 +63,30 @@ export default function ToolBox() {
 
 	useEffect(()=> {
 		if (currentFocused == null) return;
-		let currentObj = document.getElementById(currentFocused.id); 		
+		const currentObj = document.getElementById(currentFocused.id); 		
+		if (currentObj == null) return;
 		console.log(currentObj);
 
 		const handleMouseMove = ()=> {
 
-			const onMouseUp = ()=> {
-				currentObj.removeEventListener('mousemove', onMouseMove);
-				document.removeEventListener('mouseup', onMouseUp);
-			}
-
-			const onMouseMove = (e: React.MouseEvent)=> {
+			const onMouseMove = (e: MouseEvent)=> {
 				setShowObjEditDialog(showObjEditDialog && (false));  // remove the edit dialog when obj is moved
 
-		        let x = parseInt(window.getComputedStyle(currentObj).left);
-		        let y = parseInt(window.getComputedStyle(currentObj).top);
+				// if (currentObj == null) return;
+		        const x = parseInt(window.getComputedStyle(currentObj).left);
+		        const y = parseInt(window.getComputedStyle(currentObj).top);
 
 		        currentObj.style.left = (x + e.movementX) + 'px';
 		        currentObj.style.top = (y + e.movementY) + 'px';
 
 		        currentFocused.x = x + e.movementX;
 		        currentFocused.y = y + e.movementY;
+			}
+
+			const onMouseUp = ()=> {
+				// if (currentObj == null) return;
+				currentObj.removeEventListener('mousemove', onMouseMove);
+				document.removeEventListener('mouseup', onMouseUp);
 			}
 
 			currentObj.addEventListener('mousemove', onMouseMove);
@@ -81,7 +96,7 @@ export default function ToolBox() {
 		currentObj.addEventListener('mousedown', handleMouseMove);
 
 		return ()=> (currentObj.removeEventListener('mousedown', handleMouseMove));
-	}, [currentFocused]);
+	}, [currentFocused, showObjEditDialog]);
 
 
 	function ObjectOnClick(obj: Object, e: React.MouseEvent) {
@@ -96,23 +111,29 @@ export default function ToolBox() {
 		}
 	}
 
-	function ChangeBGColor(event) {
+	function ChangeBGColor(event: React.ChangeEvent<HTMLInputElement>) {
 		setCurrentBGColor(event.target.value);
+		if (currentFocused == null) return;
 		currentFocused.bg_color = currentBGColor;
 	}
 
-	function ChangeFontColor(event) {
+	function ChangeFontColor(event: React.ChangeEvent<HTMLInputElement>) {
 		setCurrentFontColor(event.target.value);
+		if (currentFocused == null) return;
 		currentFocused.font_color = currentFontColor;
 	}
 
-	function ChangeFontSize(event) {
-		setCurrentFontSize(event.target.value);
+	function ChangeFontSize(event: React.ChangeEvent<HTMLInputElement>) {
+		setCurrentFontSize(parseInt(event.target.value));
+		if (currentFocused == null) return;
 		currentFocused.font_size = currentFontSize;
 	}
 
-	function ChangeFontSizeBtn(event) {
-		let btn = event.target.id;
+	// function ChangeFontSizeBtn(event: string) {
+	function ChangeFontSizeBtn(event: React.MouseEvent<HTMLElement>) {
+		if (event == null || event.target == null || currentFocused == null) return;
+		// const event_target = event.target.id as HTMLElement;
+		const btn = (event.target as HTMLElement).id;
 
 		if (btn == "increase-btn") {
 			currentFocused.font_size = currentFontSize + 1;
@@ -124,18 +145,24 @@ export default function ToolBox() {
 	}
 
 	useEffect(()=> {
-		const handleKeyShortcuts = (e) => {
+		const handleKeyShortcuts = (e: KeyboardEvent) => {
 			if (e.repeat) return;
 
 			if (e.key == 'Escape') {
 				setShowObjEditDialog(false);
 				setCurrentFocused(null);
-				document.activeElement.blur();
+
+				if (document.activeElement == null) return
+
+				if (document.activeElement instanceof HTMLElement) {
+				    document.activeElement.blur();
+				}
+
 			} else if (e.key == 'Delete') {
 				if (currentFocused != null) {
 					// remove only the element, but the obj still exists
-					let current = document.getElementById(currentFocused.id);
-					current.remove();
+					const current = document.getElementById(currentFocused.id);
+					if (current != null) current.remove();
 
 					// remove the obj, but error happen because 
 					//  the index (size) of array changes and duplicate id happens
@@ -252,7 +279,7 @@ export default function ToolBox() {
 		)) }
 
 		{ shapeObjects.map(obj => (
-			<div key={obj.id} id={obj.id} className='p-5 absolute bg-red-200 left-[40%] top-[40%]'></div>
+			<div key={obj.id} id={obj.id} className='w-[200px] h-[200px] absolute bg-red-200 left-[40%] top-[40%]'></div>
 		)) }
 
 	</>);
