@@ -57,8 +57,10 @@ export default function ToolBox() {
 		}]);
 	}
 
-	function updateText(id: string, text: string) {
+	function updateText(event, id: string, text: string) {
 		setTextObjects(prev => prev.map(obj => (obj.id === id ? {...obj, text: text} : obj)));
+		event.target.style.height = 'auto';
+	    event.target.style.height = event.target.scrollHeight + "px"; // grow to fit
 	}
 
 	useEffect(()=> {
@@ -253,7 +255,7 @@ export default function ToolBox() {
 				id={obj.id} 
 				onClick={(e)=>{ObjectOnClick(obj, e)}}
 				onContextMenu={(e)=>{ObjectOnClick(obj, e)}}
-				className={`absolute`}
+				className={`absolute justify-center content-center`}
 				style={{
 					backgroundColor: obj.bg_color, 
 					border: obj.border + "px solid black",
@@ -264,22 +266,33 @@ export default function ToolBox() {
 				}}
 			>
 
-				<input 
+				<textarea 
 					type='text'
 					placeholder={obj.text} 
 					value={obj.text}
-					onChange={e => updateText(obj.id, e.target.value)}
-					className='w-[100%] h-[100%] text-center focus:outline-none focus:border-none'
+					onChange={e => updateText(e, obj.id, e.target.value)}
+					rows={1}
+					className='overflow-hidden resize-none text-center focus:outline-none focus:border-none select-none w-full h-auto'
 					style={{ 
 						fontSize: obj.font_size + 'px', 
 						color: obj.font_color,
 					}}
-				/>
+				></textarea>
 			</div>
 		)) }
 
 		{ shapeObjects.map(obj => (
-			<div key={obj.id} id={obj.id} className='w-[200px] h-[200px] absolute bg-red-200 left-[40%] top-[40%]'></div>
+			<div 
+				key={obj.id} 
+				id={obj.id} 
+				onClick={(e)=>{ObjectOnClick(obj, e)}}
+				onContextMenu={(e)=>{ObjectOnClick(obj, e)}}
+				className='w-[200px] h-[200px] absolute bg-red-200 left-[40%] top-[40%]'
+				style={{
+					border: obj.border + 'px solid black',
+				}}
+			>
+			</div>
 		)) }
 
 	</>);
