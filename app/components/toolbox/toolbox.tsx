@@ -80,6 +80,7 @@ export default function ToolBox() {
 
 		        currentObj.style.left = (x + e.movementX) + 'px';
 		        currentObj.style.top = (y + e.movementY) + 'px';
+		        currentObj.style.cursor = 'move'
 
 		        currentFocused.x = x + e.movementX;
 		        currentFocused.y = y + e.movementY;
@@ -87,6 +88,7 @@ export default function ToolBox() {
 
 			const onMouseUp = ()=> {
 				// if (currentObj == null) return;
+		        currentObj.style.cursor = 'default'
 				currentObj.removeEventListener('mousemove', onMouseMove);
 				document.removeEventListener('mouseup', onMouseUp);
 			}
@@ -278,6 +280,14 @@ export default function ToolBox() {
 						color: obj.font_color,
 					}}
 				></textarea>
+				<div 
+					onClick={()=>{alert(1)}}
+					className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black"
+					style={{
+						left: (obj.width / 2) - 10 + 'px',
+						top: obj.height + 10 + 'px',
+					}}>
+				</div>
 			</div>
 		)) }
 
