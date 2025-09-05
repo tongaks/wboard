@@ -13,6 +13,7 @@ type Object = {
 	border: number,
 	text: string,
 	focus: boolean,
+	rotate: number
 }
 
 export default function ToolBox() {
@@ -38,6 +39,7 @@ export default function ToolBox() {
 			border: 1,
 			text: "Text here",
 			focus: true,
+			rotate: 0,
 		}]);
 	}
 
@@ -54,6 +56,7 @@ export default function ToolBox() {
 			border: 1,
 			text: "",
 			focus: true,
+			rotate: 0,
 		}]);
 	}
 
@@ -63,14 +66,42 @@ export default function ToolBox() {
 	    event.target.style.height = event.target.scrollHeight + "px"; // grow to fit
 	}
 
+
+	// add event listener for moving an object
 	useEffect(()=> {
 		if (currentFocused == null) return;
 		const currentObj = document.getElementById(currentFocused.id); 		
 		if (currentObj == null) return;
 		console.log(currentObj);
 
-		const handleMouseMove = ()=> {
+		// get the parent's rotate div
+		// add event listener to it when clicked & hold 
+		// remove listener accordingly
 
+		const rotateDiv = currentObj.lastChild;
+		const handleRotate = ()=> {
+			currentObj.removeEventListener('mousedown', handleMouseMove);
+
+		    const onMouseMove = (event) => {
+		        setShowObjEditDialog(showObjEditDialog && false);  // remove the edit dialog when obj is moved
+
+			    let rotate_val_style = getComputedStyle(currentObj);
+				let rotate_val = parseFloat(rotate_val_style.rotate);
+		        currentObj.style.rotate = (rotate_val + event.movementY) + 'deg';
+		    }
+
+		    const onMouseUp = ()=> {
+		        document.removeEventListener('mousemove', onMouseMove);
+		        document.removeEventListener('mouseup', onMouseUp);
+				currentObj.addEventListener('mousedown', handleMouseMove);	        
+		        // rotateDiv.removeEventListener('mousedown', handleRotate)
+		    }
+
+		    document.addEventListener('mousemove', onMouseMove);
+		    document.addEventListener('mouseup', onMouseUp);
+		}
+
+		const handleMouseMove = ()=> {
 			const onMouseMove = (e: MouseEvent)=> {
 				setShowObjEditDialog(showObjEditDialog && (false));  // remove the edit dialog when obj is moved
 
@@ -98,6 +129,7 @@ export default function ToolBox() {
 		};
 
 		currentObj.addEventListener('mousedown', handleMouseMove);
+	    rotateDiv.addEventListener('mousedown', handleRotate);
 
 		return ()=> (currentObj.removeEventListener('mousedown', handleMouseMove));
 	}, [currentFocused, showObjEditDialog]);
@@ -265,6 +297,7 @@ export default function ToolBox() {
 					height: obj.width + "px",
 					left: obj.x + "px",
 					top: obj.y + "px",
+					rotate: obj.rotate + 'deg',
 				}}
 			>
 
@@ -281,7 +314,7 @@ export default function ToolBox() {
 					}}
 				></textarea>
 				<div 
-					onClick={()=>{alert(1)}}
+					// onClick={()=>{alert(1)}}
 					className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black"
 					style={{
 						left: (obj.width / 2) - 10 + 'px',
