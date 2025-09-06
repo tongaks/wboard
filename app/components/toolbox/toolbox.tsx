@@ -86,8 +86,14 @@ export default function ToolBox() {
 		        setShowObjEditDialog(showObjEditDialog && false);  // remove the edit dialog when obj is moved
 
 			    let rotate_val_style = getComputedStyle(currentObj);
-				let rotate_val = parseFloat(rotate_val_style.rotate);
-		        currentObj.style.rotate = (rotate_val + event.movementY) + 'deg';
+				let rotate_val = parseFloat(rotate_val_style.rotate) + event.movementY;
+		        currentObj.style.rotate = rotate_val + 'deg';
+		        currentFocused.rotate = rotate_val;
+		        console.log(currentFocused.rotate);
+
+		        const rotateButton = currentObj.lastChild;
+		        const rotateButtonText = rotateButton.firstChild;
+		        rotateButtonText.textContent = currentObj.style.rotate;
 		    }
 
 		    const onMouseUp = ()=> {
@@ -313,13 +319,8 @@ export default function ToolBox() {
 						color: obj.font_color,
 					}}
 				></textarea>
-				<div 
-					// onClick={()=>{alert(1)}}
-					className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black"
-					style={{
-						left: (obj.width / 2) - 10 + 'px',
-						top: obj.height + 10 + 'px',
-					}}>
+				<div className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black" style={{ left: (obj.width / 2) - 10 + 'px', top: obj.height + 10 + 'px', }}>
+					<p className="ml-20">{obj.rotate + 'deg'}</p>
 				</div>
 			</div>
 		)) }
