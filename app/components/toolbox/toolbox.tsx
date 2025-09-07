@@ -13,7 +13,8 @@ type Object = {
 	border: number,
 	text: string,
 	focus: boolean,
-	rotate: number
+	rotate: number,
+	isRotating: boolean,
 }
 
 export default function ToolBox() {
@@ -25,6 +26,17 @@ export default function ToolBox() {
 	const [currentFontSize, setCurrentFontSize] = useState(0);
 	const [currentBGColor, setCurrentBGColor] = useState('');
 	const [currentFontColor, setCurrentFontColor] = useState('#000000');
+
+	const [mouseCoordinate, setMouseCoordinate] = useState({ x: 0, y: 0 });
+
+	useEffect(()=>{
+		const handleMousePosition = (e: React.MouseEvent) => {
+			setMouseCoordinate({ x: e.clientX, y: e.clientY });
+		}
+
+		window.addEventListener('mousemove', handleMousePosition);
+		return ()=>{window.removeEventListener('mousemove', handleMousePosition)};
+	}, []);
 
 	function AddTextObject() {
 		setTextObjects(prev => [...prev, {
@@ -40,6 +52,7 @@ export default function ToolBox() {
 			text: "Text here",
 			focus: true,
 			rotate: 0,
+			isRotating: false,
 		}]);
 	}
 
@@ -57,6 +70,7 @@ export default function ToolBox() {
 			text: "",
 			focus: true,
 			rotate: 0,
+			isRotating: false,
 		}]);
 	}
 
@@ -65,7 +79,6 @@ export default function ToolBox() {
 		event.target.style.height = 'auto';
 	    event.target.style.height = event.target.scrollHeight + "px"; // grow to fit
 	}
-
 
 	// add event listener for moving an object
 	useEffect(()=> {
@@ -84,22 +97,19 @@ export default function ToolBox() {
 
 		    const onMouseMove = (event) => {
 		        setShowObjEditDialog(showObjEditDialog && false);  // remove the edit dialog when obj is moved
+		        currentFocused.isRotating = true;
 
 			    let rotate_val_style = getComputedStyle(currentObj);
 				let rotate_val = parseFloat(rotate_val_style.rotate) + event.movementY;
 		        currentObj.style.rotate = rotate_val + 'deg';
 		        currentFocused.rotate = rotate_val;
-		        console.log(currentFocused.rotate);
-
-		        const rotateButton = currentObj.lastChild;
-		        const rotateButtonText = rotateButton.firstChild;
-		        rotateButtonText.textContent = currentObj.style.rotate;
 		    }
 
 		    const onMouseUp = ()=> {
+		    	currentFocused.isRotating = false;
 		        document.removeEventListener('mousemove', onMouseMove);
 		        document.removeEventListener('mouseup', onMouseUp);
-				currentObj.addEventListener('mousedown', handleMouseMove);	        
+				currentObj.addEventListener('mousedown', handleMouseMove);	
 		        // rotateDiv.removeEventListener('mousedown', handleRotate)
 		    }
 
@@ -319,11 +329,17 @@ export default function ToolBox() {
 						color: obj.font_color,
 					}}
 				></textarea>
-				<div className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black" style={{ left: (obj.width / 2) - 10 + 'px', top: obj.height + 10 + 'px', }}>
-					<p className="ml-20">{obj.rotate + 'deg'}</p>
+				<div className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black" 
+					style={{ left: (obj.width / 2) - 10 + 'px', top: obj.height + 10 + 'px', }}>
 				</div>
 			</div>
 		)) }
+
+		{ currentFocused && currentFocused.isRotating && (
+			<div className="absolute p-2 bg-black text-white rounded-lg" style={{ left: mouseCoordinate.x + 20, top: mouseCoordinate.y + 20}}>
+				<p>{currentFocused.rotate + 'deg'}</p>
+			</div>
+		)}
 
 		{ shapeObjects.map(obj => (
 			<div 
