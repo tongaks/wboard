@@ -15,6 +15,7 @@ type Object = {
 	focus: boolean,
 	rotate: number,
 	isRotating: boolean,
+	z_index: number,
 }
 
 export default function ToolBox() {
@@ -26,6 +27,7 @@ export default function ToolBox() {
 	const [currentFontSize, setCurrentFontSize] = useState(0);
 	const [currentBGColor, setCurrentBGColor] = useState('');
 	const [currentFontColor, setCurrentFontColor] = useState('#000000');
+	const [currentZIndex, setCurrentZIndex] = useState(0);
 
 	const [mouseCoordinate, setMouseCoordinate] = useState({ x: 0, y: 0 });
 
@@ -53,7 +55,10 @@ export default function ToolBox() {
 			focus: true,
 			rotate: 0,
 			isRotating: false,
+			z_index: prev.length + 1,
 		}]);
+
+		setCurrentZIndex(textObjects.length + shapeObjects.length + 1);
 	}
 
 	function AddShapeObject() {
@@ -71,7 +76,10 @@ export default function ToolBox() {
 			focus: true,
 			rotate: 0,
 			isRotating: false,
+			z_index: prev.length + 1,
 		}]);
+
+		setCurrentZIndex(textObjects.length + shapeObjects.length + 1);
 	}
 
 	function updateText(event, id: string, text: string) {
@@ -199,36 +207,56 @@ export default function ToolBox() {
 		setCurrentFontSize(currentFocused.font_size);
 	}
 
-	useEffect(()=> {
-		const handleKeyShortcuts = (e: KeyboardEvent) => {
-			if (e.repeat) return;
+	useEffect(() => {
+	    const handleKeyShortcuts = (e: KeyboardEvent) => {
+	        if (e.repeat) return;
 
-			if (e.key == 'Escape') {
-				setShowObjEditDialog(false);
-				setCurrentFocused(null);
+	        const keyPressed = e.key;
 
-				if (document.activeElement == null) return
+	        let currentObj = null;
+	        if (currentFocused != null) {
+				currentObj = document.getElementById(currentFocused.id); 		
+	        } else console.log('currentFocused is null: ', currentFocused);
 
-				if (document.activeElement instanceof HTMLElement) {
-				    document.activeElement.blur();
-				}
+	        switch (keyPressed) {
+	            case 'Escape':
+	                setShowObjEditDialog(false);
+	                setCurrentFocused(null);
+	                if (document.activeElement instanceof HTMLElement) {
+	                    document.activeElement.blur();
+	                }
+	                break;
 
-			} else if (e.key == 'Delete') {
-				if (currentFocused != null) {
-					// remove only the element, but the obj still exists
-					const current = document.getElementById(currentFocused.id);
-					if (current != null) current.remove();
+	            case 'Delete':
+	                if (currentFocused != null) {
+	                    const current = document.getElementById(currentFocused.id);
+	                    if (current != null) current.remove();
+	                }
+	                break;
 
-					// remove the obj, but error happen because 
-					//  the index (size) of array changes and duplicate id happens
-					// setTextObjects(prev => prev.filter(obj => obj.id != currentFocused.id));
-				}
-			}
-		}
+	            case '[':
+	                if (currentObj != null && currentFocused != null) {
+	                	const newIndex = currentZIndex + 1;
+	                	setCurrentZIndex(newIndex);
+	                	currentObj.z_index = newIndex;
+	                	currentFocused.z_index = newIndex;
+	                } break;
 
-		window.addEventListener('keydown', handleKeyShortcuts);
-		return () => window.removeEventListener('keydown', handleKeyShortcuts);
+	            case ']':
+	                if (currentObj != null && currentFocused != null) {
+	                	const newIndex = currentZIndex <= 2 ? 0 : currentZIndex - 1;
+	                	setCurrentZIndex(newIndex);
+	                	currentObj.z_index = newIndex;
+	                	currentFocused.z_index = newIndex;
+	                } break;
+	        }
+	    };
+
+	    window.addEventListener('keydown', handleKeyShortcuts);
+	    return () => window.removeEventListener('keydown', handleKeyShortcuts);
+
 	}, [currentFocused]);
+
 
 	return (<>
 		<div className="z-9999 absolute mx-2 shadow-xl p-5 rounded-md w-fit h-auto bg-white top-[35%]"> 
@@ -317,6 +345,7 @@ export default function ToolBox() {
 					left: obj.x + "px",
 					top: obj.y + "px",
 					rotate: obj.rotate + 'deg',
+					zIndex: obj.z_index,
 				}}>
 
 				<textarea 
@@ -344,7 +373,7 @@ export default function ToolBox() {
 
 
 		{ currentFocused && currentFocused.isRotating && (
-			<div className="absolute p-2 bg-black text-white rounded-lg" style={{ left: mouseCoordinate.x + 20, top: mouseCoordinate.y + 20}}>
+			<div className="z-9999 absolute p-2 bg-black text-white rounded-lg" style={{ left: mouseCoordinate.x + 20, top: mouseCoordinate.y + 20}}>
 				<p>{currentFocused.rotate + 'deg'}</p>
 			</div>
 		)}
@@ -361,6 +390,7 @@ export default function ToolBox() {
 				style={{
 					border: obj.border + 'px solid black',
 					rotate: obj.rotate + 'deg',
+					zIndex: obj.z_index,
 				}}>
 
 				{ currentFocused && currentFocused.id == obj.id && (
