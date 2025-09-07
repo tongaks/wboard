@@ -326,14 +326,18 @@ export default function ToolBox() {
 					onChange={e => updateText(e, obj.id, e.target.value)}
 					rows={1}
 					className='overflow-hidden resize-none text-center focus:outline-none focus:border-none select-none w-full h-auto'
-					style={{ 
+					style={{
 						fontSize: obj.font_size + 'px', 
 						color: obj.font_color,
 					}}
 				></textarea>
-				<div className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black select-none" 
-					style={{ left: (obj.width / 2) - 10 + 'px', top: obj.height + 10 + 'px', }}>
-				</div>
+
+				{ currentFocused && currentFocused.id == obj.id && (
+					<div className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black select-none" 
+						style={{ left: (obj.width / 2) - 10 + 'px', top: obj.height + 10 + 'px', }}>
+					</div>
+				)}
+
 			</div>
 		)) }
 
@@ -359,9 +363,11 @@ export default function ToolBox() {
 					rotate: obj.rotate + 'deg',
 				}}>
 
-				<div className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black select-none" 
-					style={{ left: (obj.width / 2) - 10 + 'px', top: obj.height + 10 + 'px', }}>
-				</div>
+				{ currentFocused && currentFocused.id == obj.id && (
+					<div className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black select-none" 
+						style={{ left: (obj.width / 2) - 10 + 'px', top: obj.height + 10 + 'px', }}>
+					</div>
+				)}
 			</div>
 		)) }
 
