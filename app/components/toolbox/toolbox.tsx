@@ -92,6 +92,8 @@ export default function ToolBox() {
 		// remove listener accordingly
 
 		const rotateDiv = currentObj.lastChild;
+		console.log(rotateDiv);
+
 		const handleRotate = ()=> {
 			currentObj.removeEventListener('mousedown', handleMouseMove);
 
@@ -101,6 +103,7 @@ export default function ToolBox() {
 
 			    let rotate_val_style = getComputedStyle(currentObj);
 				let rotate_val = parseFloat(rotate_val_style.rotate) + event.movementY;
+		       
 		        currentObj.style.rotate = rotate_val + 'deg';
 		        currentFocused.rotate = rotate_val;
 		    }
@@ -246,8 +249,8 @@ export default function ToolBox() {
 				style={{
 					left: currentFocused.x + currentFocused.width + 20 + "px",
 					top: currentFocused.y + "px",
-				}}
-			>
+				}}>
+
 				<h2 className="text-lg font-semibold mb-3">Edit</h2>
 
 				{/* Background Color Section */}
@@ -314,8 +317,7 @@ export default function ToolBox() {
 					left: obj.x + "px",
 					top: obj.y + "px",
 					rotate: obj.rotate + 'deg',
-				}}
-			>
+				}}>
 
 				<textarea 
 					type='text'
@@ -329,17 +331,21 @@ export default function ToolBox() {
 						color: obj.font_color,
 					}}
 				></textarea>
-				<div className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black" 
+				<div className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black select-none" 
 					style={{ left: (obj.width / 2) - 10 + 'px', top: obj.height + 10 + 'px', }}>
 				</div>
 			</div>
 		)) }
+
+
 
 		{ currentFocused && currentFocused.isRotating && (
 			<div className="absolute p-2 bg-black text-white rounded-lg" style={{ left: mouseCoordinate.x + 20, top: mouseCoordinate.y + 20}}>
 				<p>{currentFocused.rotate + 'deg'}</p>
 			</div>
 		)}
+
+
 
 		{ shapeObjects.map(obj => (
 			<div 
@@ -350,8 +356,12 @@ export default function ToolBox() {
 				className='w-[200px] h-[200px] absolute bg-red-200 left-[40%] top-[40%]'
 				style={{
 					border: obj.border + 'px solid black',
-				}}
-			>
+					rotate: obj.rotate + 'deg',
+				}}>
+
+				<div className="absolute w-[15px] h-[15px] cursor-move rounded-xl bg-black select-none" 
+					style={{ left: (obj.width / 2) - 10 + 'px', top: obj.height + 10 + 'px', }}>
+				</div>
 			</div>
 		)) }
 
