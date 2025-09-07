@@ -32,7 +32,7 @@ export default function ToolBox() {
 	const [mouseCoordinate, setMouseCoordinate] = useState({ x: 0, y: 0 });
 
 	useEffect(()=>{
-		const handleMousePosition = (e: React.MouseEvent) => {
+		const handleMousePosition = (e: MouseEvent) => {
 			setMouseCoordinate({ x: e.clientX, y: e.clientY });
 		}
 
@@ -82,7 +82,7 @@ export default function ToolBox() {
 		setCurrentZIndex(textObjects.length + shapeObjects.length + 1);
 	}
 
-	function updateText(event, id: string, text: string) {
+	function UpdateText(event: React.ChangeEvent<HTMLTextAreaElement>, id: string, text: string) {
 		setTextObjects(prev => prev.map(obj => (obj.id === id ? {...obj, text: text} : obj)));
 		event.target.style.height = 'auto';
 	    event.target.style.height = event.target.scrollHeight + "px"; // grow to fit
@@ -100,17 +100,16 @@ export default function ToolBox() {
 		// remove listener accordingly
 
 		const rotateDiv = currentObj.lastChild;
-		console.log(rotateDiv);
 
 		const handleRotate = ()=> {
 			currentObj.removeEventListener('mousedown', handleMouseMove);
 
-		    const onMouseMove = (event) => {
+		    const onMouseMove = (event: MouseEvent) => {
 		        setShowObjEditDialog(showObjEditDialog && false);  // remove the edit dialog when obj is moved
 		        currentFocused.isRotating = true;
 
-			    let rotate_val_style = getComputedStyle(currentObj);
-				let rotate_val = parseFloat(rotate_val_style.rotate) + event.movementY;
+			    const rotate_val_style = getComputedStyle(currentObj);
+				const rotate_val = parseFloat(rotate_val_style.rotate) + event.movementY;
 		       
 		        currentObj.style.rotate = rotate_val + 'deg';
 		        currentFocused.rotate = rotate_val;
@@ -156,7 +155,9 @@ export default function ToolBox() {
 		};
 
 		currentObj.addEventListener('mousedown', handleMouseMove);
-	    rotateDiv.addEventListener('mousedown', handleRotate);
+		if (rotateDiv != null) {
+		    rotateDiv.addEventListener('mousedown', handleRotate);
+		} else console.log("Object has no rotate div");
 
 		return ()=> (currentObj.removeEventListener('mousedown', handleMouseMove));
 	}, [currentFocused, showObjEditDialog]);
@@ -238,7 +239,7 @@ export default function ToolBox() {
 	                if (currentObj != null && currentFocused != null) {
 	                	const newIndex = currentZIndex + 1;
 	                	setCurrentZIndex(newIndex);
-	                	currentObj.z_index = newIndex;
+	                	currentObj.style.zIndex = '' + newIndex;
 	                	currentFocused.z_index = newIndex;
 	                } break;
 
@@ -246,7 +247,7 @@ export default function ToolBox() {
 	                if (currentObj != null && currentFocused != null) {
 	                	const newIndex = currentZIndex <= 2 ? 0 : currentZIndex - 1;
 	                	setCurrentZIndex(newIndex);
-	                	currentObj.z_index = newIndex;
+	                	currentObj.style.zIndex = '' + newIndex;
 	                	currentFocused.z_index = newIndex;
 	                } break;
 	        }
@@ -349,10 +350,9 @@ export default function ToolBox() {
 				}}>
 
 				<textarea 
-					type='text'
 					placeholder={obj.text} 
 					value={obj.text}
-					onChange={e => updateText(e, obj.id, e.target.value)}
+					onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {UpdateText(e, obj.id, e.target.value)}}
 					rows={1}
 					className='overflow-hidden resize-none text-center focus:outline-none focus:border-none select-none w-full h-auto'
 					style={{
