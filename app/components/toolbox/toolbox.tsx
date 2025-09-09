@@ -41,8 +41,8 @@ export default function ToolBox() {
 	}, []);
 
 	function AddTextObject() {
-		setTextObjects(prev => [...prev, {
-			id: "txt-obj-"+prev.length, 
+		const newTextObject = {
+			id: "txt-obj-"+textObjects.length, 
 			width: 200, 
 			height: 200, 
 			x: 500, 
@@ -55,11 +55,29 @@ export default function ToolBox() {
 			focus: true,
 			rotate: 0,
 			isRotating: false,
-			z_index: prev.length + 1,
-		}]);
+			z_index: textObjects.length + 1,
+		}
+
+		setTextObjects(prev => [...prev, newTextObject]);
 
 		setCurrentZIndex(textObjects.length + shapeObjects.length + 1);
+		setCurrentFocused(textObjects[textObjects.length - 1]);
 	}
+
+	// run this everytime another text object is added to update the currentFocused
+	useEffect(()=> {   			// for text objects
+		const currentIndex = textObjects.length == 0 ? 0 : textObjects.length - 1;
+		setCurrentFocused(textObjects[currentIndex]);
+		console.log(currentFocused);
+
+	}, [textObjects]);
+
+	useEffect(()=> {  			// for shape objects
+		const currentIndex = shapeObjects.length == 0 ? 0 : shapeObjects.length - 1;
+		setCurrentFocused(shapeObjects[currentIndex]);
+		console.log(currentFocused);
+
+	}, [shapeObjects]);
 
 	function AddShapeObject() {
 		setShapeObjects(prev => [...prev, {
@@ -93,12 +111,13 @@ export default function ToolBox() {
 		if (currentFocused == null) return;
 		const currentObj = document.getElementById(currentFocused.id); 		
 		if (currentObj == null) return;
-		console.log(currentObj);
+		// console.log(currentObj);
 
 		// get the parent's rotate div
 		// add event listener to it when clicked & hold 
 		// remove listener accordingly
 
+        document.querySelector('textarea')?.blur();
 		const rotateDiv = currentObj.lastChild;
 
 		const handleRotate = ()=> {
