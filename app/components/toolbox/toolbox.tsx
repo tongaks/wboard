@@ -27,7 +27,6 @@ export default function ToolBox() {
 	const [currentFontSize, setCurrentFontSize] = useState(0);
 	const [currentBGColor, setCurrentBGColor] = useState('');
 	const [currentFontColor, setCurrentFontColor] = useState('#000000');
-	const [currentZIndex, setCurrentZIndex] = useState(0);
 
 	const [mouseCoordinate, setMouseCoordinate] = useState({ x: 0, y: 0 });
 
@@ -55,33 +54,29 @@ export default function ToolBox() {
 			focus: true,
 			rotate: 0,
 			isRotating: false,
-			z_index: textObjects.length + 1,
+			z_index: textObjects.length + shapeObjects.length + 1,
 		}
 
 		setTextObjects(prev => [...prev, newTextObject]);
-
-		setCurrentZIndex(textObjects.length + shapeObjects.length + 1);
-		setCurrentFocused(textObjects[textObjects.length - 1]);
 	}
 
 	// run this everytime another text object is added to update the currentFocused
-	useEffect(()=> {   			// for text objects
+	useEffect(()=> { 			// for text objects
 		const currentIndex = textObjects.length == 0 ? 0 : textObjects.length - 1;
 		setCurrentFocused(textObjects[currentIndex]);
 		console.log(currentFocused);
 
 	}, [textObjects]);
 
-	useEffect(()=> {  			// for shape objects
+	useEffect(()=> {			// for shape objects
 		const currentIndex = shapeObjects.length == 0 ? 0 : shapeObjects.length - 1;
 		setCurrentFocused(shapeObjects[currentIndex]);
 		console.log(currentFocused);
-
 	}, [shapeObjects]);
 
 	function AddShapeObject() {
-		setShapeObjects(prev => [...prev, {
-			id: "shp-obj-"+prev.length, 
+		const newShapeObject = {
+			id: "shp-obj-"+shapeObjects.length, 
 			width: 200, 
 			height: 200, 
 			x: 500, 
@@ -94,10 +89,10 @@ export default function ToolBox() {
 			focus: true,
 			rotate: 0,
 			isRotating: false,
-			z_index: prev.length + 1,
-		}]);
+			z_index: textObjects.length + shapeObjects.length + 1,
+		}
 
-		setCurrentZIndex(textObjects.length + shapeObjects.length + 1);
+		setShapeObjects(prev => [...prev, newShapeObject]);
 	}
 
 	function UpdateText(event: React.ChangeEvent<HTMLTextAreaElement>, id: string, text: string) {
@@ -256,16 +251,16 @@ export default function ToolBox() {
 
 	            case '[':
 	                if (currentObj != null && currentFocused != null) {
-	                	const newIndex = currentZIndex + 1;
-	                	setCurrentZIndex(newIndex);
+	                	const currentZIndex = currentFocused.z_index;
+	                	const newIndex = (currentZIndex == textObjects.length + shapeObjects.length) ? currentZIndex : currentZIndex + 1;
+
 	                	currentObj.style.zIndex = '' + newIndex;
 	                	currentFocused.z_index = newIndex;
 	                } break;
 
 	            case ']':
 	                if (currentObj != null && currentFocused != null) {
-	                	const newIndex = currentZIndex <= 2 ? 0 : currentZIndex - 1;
-	                	setCurrentZIndex(newIndex);
+	                	const newIndex = currentFocused.z_index <= 2 ? 0 : currentFocused.z_index - 1;
 	                	currentObj.style.zIndex = '' + newIndex;
 	                	currentFocused.z_index = newIndex;
 	                } break;
